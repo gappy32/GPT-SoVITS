@@ -766,8 +766,11 @@ async def generate(request:Request):
 
 @app.get("/sample/{speaker}")
 async def play_sample(speaker: str = 'default'):
-    if(speaker=='default'):
+    print(f"Incoming GET request for /sample/{speaker}")
+
+    if speaker == 'default':
         return FileResponse(default_refer.path,status_code=200)
+
     print(f"sending {voices[speaker].refer_wav_path}")
     return FileResponse(voices[speaker].refer_wav_path,status_code=200)
 
