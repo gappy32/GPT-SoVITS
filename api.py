@@ -645,8 +645,9 @@ def handle(refer_wav_path, prompt_text, prompt_language, text, text_language):
     return StreamingResponse(wav, media_type="audio/wav")
 
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Create a new FastAPI instance
 
@@ -727,6 +728,8 @@ async def tts_endpoint(
     return handle(refer_wav_path, prompt_text, prompt_language, text, text_language)
 
 
+
+
 @app.get("/speakers")
 async def speakers(request:Request):
     voices_info = [
@@ -743,10 +746,9 @@ async def speakers(request:Request):
                     "name":v.name,
                     "voice_id":v.name,
                     "preview_url": f"{str(request.base_url)}sample/{v.name}"
-                } 
+                }
             )
-    return voices_info
-
+    return JSONResponse(voices_info)
 
 @app.post("/generate")
 async def generate(request:Request):
