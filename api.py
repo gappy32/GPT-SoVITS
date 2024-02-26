@@ -210,7 +210,7 @@ parser.add_argument("-d", "--device", type=str, default=g_config.infer_device, h
 parser.add_argument("-a", "--bind_addr", type=str, default="127.0.0.1", help="default: 127.0.0.1")
 parser.add_argument("-p", "--port", type=int, default=g_config.api_port, help="default: 9880")
 parser.add_argument("-fp", "--full_precision", action="store_true", default=False, help="覆盖config.is_half为False, 使用全精度")
-parser.add_argument("-hp", "--half_precision", action="store_true", default=False, help="覆盖config.is_half为True, 使用半精度")
+parser.add_argument("-hp", "--half_precision", action="store_true", default=True, help="覆盖config.is_half为True, 使用半精度")
 # bool值的用法为 `python ./api.py -fp ...`
 # 此时 full_precision==True, half_precision==False
 
@@ -645,25 +645,7 @@ def handle(refer_wav_path, prompt_text, prompt_language, text, text_language):
     return StreamingResponse(wav, media_type="audio/wav")
 
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-
-# Create a new FastAPI instance
-
 app = FastAPI()
-
-origins = [
-    "*"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
 
 
 @app.post("/control")
@@ -728,6 +710,13 @@ async def tts_endpoint(
     return handle(refer_wav_path, prompt_text, prompt_language, text, text_language)
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/speakers")
@@ -746,9 +735,10 @@ async def speakers(request:Request):
                     "name":v.name,
                     "voice_id":v.name,
                     "preview_url": f"{str(request.base_url)}sample/{v.name}"
-                }
+                } 
             )
-    return JSONResponse(voices_info)
+    return voices_info
+
 
 @app.post("/generate")
 async def generate(request:Request):
@@ -776,13 +766,10 @@ async def generate(request:Request):
 
 @app.get("/sample/{speaker}")
 async def play_sample(speaker: str = 'default'):
-    print(f"Incoming GET request for /sample/{speaker}")
-
-    if speaker == 'default':
-        return FileResponse(default_refer.path, status_code=200)
-
+    if(speaker=='default'):
+        return FileResponse(default_refer.path,status_code=200)
     print(f"sending {voices[speaker].refer_wav_path}")
-    return FileResponse(voices[speaker].refer_wav_path, status_code=200)
+    return FileResponse(voices[speaker].refer_wav_path,status_code=200)
 
 
 @app.post("/session") #just a placeholder
